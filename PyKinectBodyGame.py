@@ -26,11 +26,12 @@ class Button(object):
 
     mouseOver = False
 
-    def __init__(self,text,pos,screen,size, color):
+    def __init__(self,text,pos,screen,size, startColor, endColor):
         self.text = text
         self.pos = pos
         self.size = size
-        self.color = color
+        self.startColor = startColor
+        self.endColor = endColor
         # surface to blit/render text on 
         self.screen = screen
         # sets font size and renders text with given color 
@@ -51,9 +52,9 @@ class Button(object):
         
     def findColor(self):
         if self.mouseOver:
-            return self.color
+            return self.endColor
         else:
-            return (192, 192, 192) # light grey 
+            return self.startColor  
 
 
 class BodyGameRuntime(object):
@@ -77,8 +78,11 @@ class BodyGameRuntime(object):
         self._startButton = None
         self._buttonStart = True
         self._buttonRecord = False
-        self._recordButtonText = ["Start Recording", "End Recording"]
-        self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, ((220,20,60)))
+        self._recordButtonText = ["Start Session", "End Session"]
+        self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, (190,190,190),((220,20,60)))
+
+        #data analysis variables
+        self._repetitions = 0
         
 
         # Loop until the user clicks the close button.
@@ -137,12 +141,12 @@ class BodyGameRuntime(object):
         elif self._recordButton.rect.collidepoint((x,y)):
             if (self._buttonRecord == True):
                 #stop recording
-                self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, ((220,20,60)))
+                self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, (190,190,190),((220,20,60)))
                 self._recordButton.draw()
                 self._buttonRecord = False
             else:
                 #now recording
-                self._recordButton = Button(self._recordButtonText[1], (20,450), self._screen, 70, ((220,20,60)))
+                self._recordButton = Button(self._recordButtonText[1], (20,450), self._screen, 70, ((220,20,60)), (190,190,190))
                 self._recordButton.draw()
                 self._buttonRecord = True
             
@@ -276,7 +280,7 @@ class BodyGameRuntime(object):
                 self._screen.blit(self._opaqueLoginRect, (0,0))    # (0,0) are the top-left coordinates
                 if (self._buttonStart):
                     self._buttonStart = False
-                    self._startButton = Button("Start Rehab Session", (300,300), self._screen, 100, ((0,128,0)))
+                    self._startButton = Button("Start Rehab Session", (300,300), self._screen, 100, (190,190,190),((0,128,0)))
                     self._startButton.draw()
 
             if (not self._buttonStart and self._loginScreen):
@@ -299,7 +303,7 @@ class BodyGameRuntime(object):
 
 
                 font = pygame.font.Font(None,25)
-                AnglesText = font.render("", 1, (255,255,255))
+                AnglesText = font.render("Number of Repititions: " + str(self._repetitions), 1, (0,0,0))
                 self._screen.blit(AnglesText, (32, 40))
 
 
