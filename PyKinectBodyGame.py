@@ -26,9 +26,11 @@ class Button(object):
 
     mouseOver = False
 
-    def __init__(self,text,pos,screen):
+    def __init__(self,text,pos,screen,size, color):
         self.text = text
         self.pos = pos
+        self.size = size
+        self.color = color
         # surface to blit/render text on 
         self.screen = screen
         # sets font size and renders text with given color 
@@ -40,7 +42,7 @@ class Button(object):
         self.draw()
 
     def renderText(self):
-        titleFont = pygame.font.SysFont("comicsans",100)
+        titleFont = pygame.font.SysFont("comicsans",self.size)
         self.renderedText = titleFont.render(self.text, True, self.findColor())
             
     def draw(self):
@@ -49,7 +51,7 @@ class Button(object):
         
     def findColor(self):
         if self.mouseOver:
-            return (202, 255, 112) # light green
+            return self.color
         else:
             return (192, 192, 192) # light grey 
 
@@ -73,9 +75,11 @@ class BodyGameRuntime(object):
         self._loginScreen = True
         self._kinectScreen = False
         self._startButton = None
-        self._recordButton = None
         self._buttonStart = True
         self._buttonRecord = False
+        self._recordButtonText = ["Start Recording", "End Recording"]
+        self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, ((220,20,60)))
+        
 
         # Loop until the user clicks the close button.
         self._done = False
@@ -131,7 +135,17 @@ class BodyGameRuntime(object):
             self._kinectScreen = True
         
         elif self._recordButton.rect.collidepoint((x,y)):
-            self._buttonRecord = True
+            if (self._buttonRecord == True):
+                #stop recording
+                self._recordButton = Button(self._recordButtonText[0], (20,450), self._screen, 70, ((220,20,60)))
+                self._recordButton.draw()
+                self._buttonRecord = False
+            else:
+                #now recording
+                self._recordButton = Button(self._recordButtonText[1], (20,450), self._screen, 70, ((220,20,60)))
+                self._recordButton.draw()
+                self._buttonRecord = True
+            
 
         else:
             pass
@@ -261,8 +275,8 @@ class BodyGameRuntime(object):
                 self._opaqueLoginRect.fill((0,0,0))           # this fills the entire surface
                 self._screen.blit(self._opaqueLoginRect, (0,0))    # (0,0) are the top-left coordinates
                 if (self._buttonStart):
-                    self._buttonStart = False;
-                    self._startButton = Button("Start Rehab Session", (300,300), self._screen)
+                    self._buttonStart = False
+                    self._startButton = Button("Start Rehab Session", (300,300), self._screen, 100, ((0,128,0)))
                     self._startButton.draw()
 
             if (not self._buttonStart and self._loginScreen):
@@ -271,23 +285,17 @@ class BodyGameRuntime(object):
 
             # --- kinect screen
             if self._kinectScreen == True:
+                self._recordButton.draw()
+        
                 self.opaqueRect = pygame.Surface((400, self._windowHeight-690))  # the size of your rect
                 self.opaqueRect.set_alpha(128)                # alpha level
                 self.opaqueRect.fill((255,255,255))           # this fills the entire surface
                 self._screen.blit(self.opaqueRect, (20,20))    # (0,0) are the top-left coordinates
 
-                #if (self._buttonRecord):
-                    #self._recordButton = Button("Start Recording", (20,20), self._screen)
-                    #self._recordButton.draw()
-
-                if (not self._buttonRecord and self._kinectScreen):
-                    self._recordButton = Button("Start Recording", (20,20), self._screen)
-                    self._recordButton.draw()
-
-                self.opaqueRect = pygame.Surface((400, 370))  # the size of your rect
+                self.opaqueRect = pygame.Surface((400, 270))  # the size of your rect
                 self.opaqueRect.set_alpha(128)                # alpha level
                 self.opaqueRect.fill((255,255,255))           # this fills the entire surface
-                self._screen.blit(self.opaqueRect, (20,400))    # (0,0) are the top-left coordinates
+                self._screen.blit(self.opaqueRect, (20,500))    # (0,0) are the top-left coordinates
 
 
                 font = pygame.font.Font(None,25)
