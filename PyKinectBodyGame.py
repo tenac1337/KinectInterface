@@ -73,7 +73,9 @@ class BodyGameRuntime(object):
         self._loginScreen = True
         self._kinectScreen = False
         self._startButton = None
+        self._recordButton = None
         self._buttonStart = True
+        self._buttonRecord = False
 
         # Loop until the user clicks the close button.
         self._done = False
@@ -93,13 +95,22 @@ class BodyGameRuntime(object):
     def mouseMotion(self,event):
             # draws buttons 
         self.mouseMotionPos = pygame.mouse.get_pos()
+
         if (self._startButton and self._loginScreen):
-            # checks if mouse is directly over button/text
             if self._startButton.rect.collidepoint(self.mouseMotionPos):
                 self._startButton.mouseOver = True
             else:
                 self._startButton.mouseOver = False
             self._startButton.draw()
+            pygame.display.flip()
+
+
+        elif (self._recordButton and self._kinectScreen):
+            if self._recordButton.rect.collidepoint(self.mouseMotionPos):
+                self._recordButton.mouseOver = True
+            else:
+                self._recordButton.mouseOver = False
+            self._recordButton.draw()
             pygame.display.flip()
 
 
@@ -109,12 +120,19 @@ class BodyGameRuntime(object):
             x,y = self.mousePressPos
             self.buttonCheck(x,y)
 
-
+        elif (self._recordButton and self._kinectScreen):
+            self.mousePressPos = pygame.mouse.get_pos()
+            x,y = self.mousePressPos
+            self.buttonCheck(x,y)
 
     def buttonCheck(self,x,y):
         if self._startButton.rect.collidepoint((x,y)):
             self._loginScreen = False
             self._kinectScreen = True
+        
+        elif self._recordButton.rect.collidepoint((x,y)):
+            self._buttonRecord = True
+
         else:
             pass
 
@@ -251,12 +269,20 @@ class BodyGameRuntime(object):
                 self._startButton.draw()
 
 
-            #MD --- kinect screen
+            # --- kinect screen
             if self._kinectScreen == True:
                 self.opaqueRect = pygame.Surface((400, self._windowHeight-690))  # the size of your rect
                 self.opaqueRect.set_alpha(128)                # alpha level
                 self.opaqueRect.fill((255,255,255))           # this fills the entire surface
                 self._screen.blit(self.opaqueRect, (20,20))    # (0,0) are the top-left coordinates
+
+                #if (self._buttonRecord):
+                    #self._recordButton = Button("Start Recording", (20,20), self._screen)
+                    #self._recordButton.draw()
+
+                if (not self._buttonRecord and self._kinectScreen):
+                    self._recordButton = Button("Start Recording", (20,20), self._screen)
+                    self._recordButton.draw()
 
                 self.opaqueRect = pygame.Surface((400, 370))  # the size of your rect
                 self.opaqueRect.set_alpha(128)                # alpha level
