@@ -160,6 +160,13 @@ class BodyGameRuntime(object):
             surface_to_draw = pygame.transform.scale(self._frame_surface, (self._screen.get_width(), target_height));
             self._screen.blit(surface_to_draw, (0,0))
             surface_to_draw = None
+
+
+            #MD --- drawing stuff
+            self._sampleBlueRect = pygame.draw.rect(self._screen,  (0,0,255), pygame.Rect(30, 30, 60, 60))
+            self._sampleRedRect = pygame.draw.rect(self._screen,  (205,92,92), pygame.Rect(90,90, 120, 120))
+
+
             pygame.display.update()
 
             # --- Go ahead and update the screen with what we've drawn.
