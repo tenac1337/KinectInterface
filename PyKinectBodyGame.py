@@ -22,6 +22,38 @@ SKELETON_COLORS = [pygame.color.THECOLORS["red"],
                   pygame.color.THECOLORS["violet"]]
 
 
+class Button(object):
+
+    mouseOver = False
+
+    def __init__(self,text,pos,screen):
+        self.text = text
+        self.pos = pos
+        # surface to blit/render text on 
+        self.screen = screen
+        # sets font size and renders text with given color 
+        self.renderText()
+        # finds pos of text 
+        self.rect = self.renderedText.get_rect()
+        self.rect.topleft = self.pos
+
+        self.draw()
+
+    def renderText(self):
+        titleFont = pygame.font.SysFont("comicsans",100)
+        self.renderedText = titleFont.render(self.text, True, self.findColor())
+            
+    def draw(self):
+        self.renderText()
+        self.screen.blit(self.renderedText, self.rect)
+        
+    def findColor(self):
+        if self.mouseOver:
+            return (202, 255, 112) # light green
+        else:
+            return (192, 192, 192) # light grey 
+
+
 class BodyGameRuntime(object):
     def __init__(self):
         pygame.init()
@@ -31,10 +63,17 @@ class BodyGameRuntime(object):
 
         # Set the width and height of the screen [width, height]
         self._infoObject = pygame.display.Info()
-        self._screen = pygame.display.set_mode((self._infoObject.current_w >> 1, self._infoObject.current_h >> 1), 
-                                               pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.RESIZABLE, 32)
+        self._windowHeight = 800
+        self._screen = pygame.display.set_mode((self._infoObject.current_w >> 1, self._windowHeight), 
+                                               pygame.HWSURFACE|pygame.DOUBLEBUF, 32)
 
         pygame.display.set_caption("Kinect for Windows v2 Body Game")
+
+        # Login screen initialization
+        self._loginScreen = True
+        self._kinectScreen = False
+        self._startButton = None
+        self._buttonStart = True
 
         # Loop until the user clicks the close button.
         self._done = False
@@ -50,6 +89,35 @@ class BodyGameRuntime(object):
 
         # here we will store skeleton data 
         self._bodies = None
+
+    def mouseMotion(self,event):
+            # draws buttons 
+        self.mouseMotionPos = pygame.mouse.get_pos()
+        if (self._startButton and self._loginScreen):
+            # checks if mouse is directly over button/text
+            if self._startButton.rect.collidepoint(self.mouseMotionPos):
+                self._startButton.mouseOver = True
+            else:
+                self._startButton.mouseOver = False
+            self._startButton.draw()
+            pygame.display.flip()
+
+
+    def mousePressed(self,event):
+        if (self._startButton and self._loginScreen):
+            self.mousePressPos = pygame.mouse.get_pos()
+            x,y = self.mousePressPos
+            self.buttonCheck(x,y)
+
+
+
+    def buttonCheck(self,x,y):
+        if self._startButton.rect.collidepoint((x,y)):
+            self._loginScreen = False
+            self._kinectScreen = True
+        else:
+            pass
+
 
 
     def draw_body_bone(self, joints, jointPoints, color, joint0, joint1):
@@ -127,7 +195,11 @@ class BodyGameRuntime(object):
                 elif event.type == pygame.VIDEORESIZE: # window resized
                     self._screen = pygame.display.set_mode(event.dict['size'], 
                                                pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.RESIZABLE, 32)
-                    
+                elif (event.type == pygame.MOUSEMOTION): 
+                    self.mouseMotion(event)          
+                elif (event.type == pygame.MOUSEBUTTONDOWN):
+                    self.mousePressed(event)          
+
             # --- Game logic should go here
 
             # --- Getting frames and drawing  
@@ -153,6 +225,9 @@ class BodyGameRuntime(object):
                     joint_points = self._kinect.body_joints_to_color_space(joints)
                     self.draw_body(joints, joint_points, SKELETON_COLORS[i])
 
+
+
+
             # --- copy back buffer surface pixels to the screen, resize it if needed and keep aspect ratio
             # --- (screen size may be different from Kinect's color frame size) 
             h_to_w = float(self._frame_surface.get_height()) / self._frame_surface.get_width()
@@ -161,10 +236,37 @@ class BodyGameRuntime(object):
             self._screen.blit(surface_to_draw, (0,0))
             surface_to_draw = None
 
+            # --- login screen
+            if self._loginScreen == True:
+                self._opaqueLoginRect = pygame.Surface((self._infoObject.current_w >> 1, self._windowHeight))
+                self._opaqueLoginRect.set_alpha(200)                # alpha level
+                self._opaqueLoginRect.fill((0,0,0))           # this fills the entire surface
+                self._screen.blit(self._opaqueLoginRect, (0,0))    # (0,0) are the top-left coordinates
+                if (self._buttonStart):
+                    self._buttonStart = False;
+                    self._startButton = Button("Start Rehab Session", (300,300), self._screen)
+                    self._startButton.draw()
 
-            #MD --- drawing stuff
-            self._sampleBlueRect = pygame.draw.rect(self._screen,  (0,0,255), pygame.Rect(30, 30, 60, 60))
-            self._sampleRedRect = pygame.draw.rect(self._screen,  (205,92,92), pygame.Rect(90,90, 120, 120))
+            if (not self._buttonStart and self._loginScreen):
+                self._startButton.draw()
+
+
+            #MD --- kinect screen
+            if self._kinectScreen == True:
+                self.opaqueRect = pygame.Surface((400, self._windowHeight-690))  # the size of your rect
+                self.opaqueRect.set_alpha(128)                # alpha level
+                self.opaqueRect.fill((255,255,255))           # this fills the entire surface
+                self._screen.blit(self.opaqueRect, (20,20))    # (0,0) are the top-left coordinates
+
+                self.opaqueRect = pygame.Surface((400, 370))  # the size of your rect
+                self.opaqueRect.set_alpha(128)                # alpha level
+                self.opaqueRect.fill((255,255,255))           # this fills the entire surface
+                self._screen.blit(self.opaqueRect, (20,400))    # (0,0) are the top-left coordinates
+
+
+                font = pygame.font.Font(None,25)
+                AnglesText = font.render("", 1, (255,255,255))
+                self._screen.blit(AnglesText, (32, 40))
 
 
             pygame.display.update()
@@ -183,4 +285,3 @@ class BodyGameRuntime(object):
 __main__ = "Kinect v2 Body Game"
 game = BodyGameRuntime();
 game.run();
-
